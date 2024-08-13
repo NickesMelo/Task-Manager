@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="current-time">
+        <p>Data e Hora Atual: {{ current_datetime }}</p>
+    </div>
+
+    <div class="boards-container">
+        <form action="{{ url_for('create_board') }}" method="post" class="create-board-form">
+            <input type="text" name="board_name" placeholder="Nome do Novo Quadro" required>
+            <button type="submit">Criar Quadro</button>
+        </form>
+
+        {% for board in boards %}
+            {% set board_index = loop.index0 %}
+            <div class="board">
+                <h2>{{ board['name'] }}</h2>
+                <form action="{{ url_for('delete_board', board_index=board_index) }}" method="post" class="delete-board-form">
+                    <button type="submit" onclick="return confirm('Tem certeza que deseja excluir este quadro?');">Excluir Quadro</button>
+                </form>
+                <form action="{{ url_for('create_list', board_index=board_index) }}" method="post" class="create-list-form">
+                    <input type="text" name="list_name" placeholder="Nome da Nova Lista" required>
+                    <button type="submit">Criar Lista</button>
+                </form>
+
+                <div class="lists-container">
+                    {% for list in board['lists'] %}
+                        {% set list_index = loop.index0 %}
+                        <div class="list">
+                            <h3>{{ list['name'] }}</h3>
+                            <form action="{{ url_for('create_card', board_index=board_index, list_index=list_index) }}" method="post" class="create-card-form">
+                                <input type="text" name="task_name" placeholder="Nome da Nova Tarefa" required>
+                                <select name="task_priority" required>
+                                    <option value="low">Baixa</option>
+                                    <option value="medium">Média</option>
+                                    <option value="high">Alta</option>
+                                </select>
+                                <label for="task_date">Data de Criação:</label>
+                                <input type="date" name="task_date" value="{{ current_date }}" required>
+                                <label for="task_time">Hora de Criação:</label>
+                                <input type="time" name="task_time" value="{{ current_time }}" required>
+                                <label for="task_deadline">Prazo:</label>
+                                <input type="date" name="task_deadline">
+                                <button type="submit">Adicionar Tarefa</button>
+                            </form>
+
+                            <ul class="cards-list">
+                                {% for card in list['cards'] %}
+                                    {% set card_index = loop.index0 %}
+                                    <li class="{{ card['priority'] }} {% if card['completed'] %}completed{% endif %}">
+                                        <div>
+                                            <strong>{{ card['name'] }}</strong><br>
+                                            Criada em: {{ card['date'] }} às {{ card['time'] }}<br>
+                                            Prazo: {{ card['deadline'] if card['deadline'] else 'Nenhum prazo'}}
+                                        </div>
+                                        <form action="{{ url_for('toggle_card', board_index=board_index, list_index=list_index, card_index=card_index) }}" method="post" class="card-form">
+                                            <button type="submit">{{ 'Desfazer' if card['completed'] else 'Concluir' }}</button>
+                                        </form>
+                                        <form action="{{ url_for('delete_card', board_index=board_index, list_index=list_index, card_index=card_index) }}" method="post" class="card-form">
+                                            <button type="submit">Excluir</button>
+                                        </form>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
